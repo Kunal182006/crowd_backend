@@ -19,13 +19,13 @@ const pool = new Pool({
 app.get('/stats', async (req, res) => {
   try {
     const result = await pool.query('SELECT * FROM entries ORDER BY created_at DESC LIMIT 10');
-
-    res.json(result.rows[0]);
+    res.json(result.rows);
   } catch (err) {
     console.error('Stats error:', err);
     res.status(500).json({ error: 'Failed to fetch stats' });
   }
 });
+
 
 // ------------------- History -------------------
 app.get('/history', async (req, res) => {
