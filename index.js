@@ -15,14 +15,11 @@ const pool = new Pool({
   ssl: { rejectUnauthorized: false }
 });
 
-
 // ------------------- Stats -------------------
 app.get('/stats', async (req, res) => {
   try {
-    const result = await pool.query(`
-      SELECT MIN(count) AS min, MAX(count) AS max, ROUND(AVG(count)::numeric, 2) AS avg
-      FROM entries
-    `);
+    const result = await pool.query('SELECT * FROM entries ORDER BY created_at DESC LIMIT 10');
+
     res.json(result.rows[0]);
   } catch (err) {
     console.error('Stats error:', err);
