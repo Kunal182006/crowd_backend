@@ -11,12 +11,10 @@ app.use(cors());
 
 // ------------------- PostgreSQL Setup -------------------
 const pool = new Pool({
-  user: 'postgres',
-  host: 'localhost',
-  database: 'crowd_db',
-  password: 'kunal123', // change if needed
-  port: 5432,
+  connectionString: process.env.DATABASE_URL,
+  ssl: { rejectUnauthorized: false }
 });
+
 
 // ------------------- Stats -------------------
 app.get('/stats', async (req, res) => {
