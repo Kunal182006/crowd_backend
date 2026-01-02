@@ -18,7 +18,9 @@ const pool = new Pool({
 // ------------------- Stats -------------------
 app.get('/stats', async (req, res) => {
   try {
-    const result = await pool.query('SELECT * FROM entries ORDER BY created_at DESC LIMIT 10');
+    const result = await pool.query(
+      'SELECT * FROM public.entries ORDER BY created_at DESC LIMIT 10'
+    );
     res.json(result.rows);
   } catch (err) {
     console.error('Stats error:', err);
