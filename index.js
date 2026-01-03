@@ -35,15 +35,33 @@ app.get('/stats', async (req, res) => {
   }
 });
 app.get('/chart', async (req, res) => {
+  const { area_id, person_id } = req.query;
+  const conditions = [];
+  const values = [];
+
+  if (area_id) {
+    conditions.push(`area_id = $${values.length + 1}`);
+    values.push(area_id);
+  }
+
+  if (person_id) {
+    conditions.push(`person_id = $${values.length + 1}`);
+    values.push(person_id);
+  }
+
+  const whereClause = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
+
   try {
-    const result = await pool.query(`
-      SELECT
-        DATE_TRUNC('hour', created_at) AS hour,
-        SUM(count) AS total_count
+    const result = await pool.query(
+      `
+      SELECT DATE_TRUNC('hour', created_at) AS hour, SUM(count) AS total_count
       FROM public.entries
+      ${whereClause}
       GROUP BY hour
       ORDER BY hour ASC
-    `);
+      `,
+      values
+    );
     res.json(result.rows);
   } catch (err) {
     console.error('Chart error:', err);
