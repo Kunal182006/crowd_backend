@@ -27,6 +27,19 @@ app.get('/admin/init-db', async (req, res) => {
     res.status(500).send('❌ Failed to create table');
   }
 });
+app.post('/admin/add-test', async (req, res) => {
+  try {
+    const result = await pool.query(
+      `INSERT INTO public.entries (area_id, count, person_id)
+       VALUES ($1, $2, $3) RETURNING *`,
+      [1, 5, 'test-person']
+    );
+    res.json({ inserted: result.rows[0] });
+  } catch (err) {
+    console.error('Add test error:', err);
+    res.status(500).send('❌ Failed to add test row');
+  }
+});
 
 // ------------------- PostgreSQL Setup -------------------
 console.log('DATABASE_URL from env:', process.env.DATABASE_URL);
