@@ -1,3 +1,5 @@
+console.log('✅ Starting backend...');
+console.log('DATABASE_URL from env:', process.env.DATABASE_URL);
 const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
@@ -8,6 +10,23 @@ const port = 3000;
 
 app.use(bodyParser.json());
 app.use(cors());
+app.get('/admin/init-db', async (req, res) => {
+  try {
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS public.entries (
+        id SERIAL PRIMARY KEY,
+        area_id INTEGER,
+        count INTEGER NOT NULL,
+        person_id TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
+    res.send('✅ Table created successfully');
+  } catch (err) {
+    console.error('Init DB error:', err);
+    res.status(500).send('❌ Failed to create table');
+  }
+});
 
 // ------------------- PostgreSQL Setup -------------------
 console.log('DATABASE_URL from env:', process.env.DATABASE_URL);
@@ -29,12 +48,11 @@ app.get('/stats', async (req, res) => {
   }
 });
 
-
 // ------------------- History -------------------
 app.get('/history', async (req, res) => {
   try {
     const result = await pool.query(`
-      SELECT count, created_at FROM entries
+      SELECT count, created_at FROM public.entries
       ORDER BY created_at DESC
       LIMIT 10
     `);
@@ -46,12 +64,11 @@ app.get('/history', async (req, res) => {
 });
 
 // ------------------- Create Area -------------------
-// Create Area
 app.post('/areas', async (req, res) => {
   const { name } = req.body;
   try {
     await pool.query(
-      `INSERT INTO areas (name, latitude, longitude, radius, max_capacity)
+      `INSERT INTO public.areas (name, latitude, longitude, radius, max_capacity)
        VALUES ($1, $2, $3, $4, $5)`,
       [name, req.body.latitude, req.body.longitude, req.body.radius, req.body.max_capacity]
     );
@@ -62,12 +79,12 @@ app.post('/areas', async (req, res) => {
   }
 });
 
-// Log Entry
+// ------------------- Log Entry -------------------
 app.post('/entries', async (req, res) => {
   const { area_id, count, person_id } = req.body;
   try {
     await pool.query(
-      `INSERT INTO entries (area_id, count, person_id) VALUES ($1, $2, $3)`,
+      `INSERT INTO public.entries (area_id, count, person_id) VALUES ($1, $2, $3)`,
       [area_id, count, person_id || null]
     );
     res.status(200).json({ message: `Entry logged for person ${person_id || 'unknown'} in area ${area_id}` });
@@ -83,13 +100,13 @@ app.get('/areas/:id/stats', async (req, res) => {
   try {
     const result = await pool.query(`
       SELECT SUM(count) AS total
-      FROM entries
+      FROM public.entries
       WHERE area_id = $1
     `, [areaId]);
 
     const total = parseInt(result.rows[0].total || 0);
     const capResult = await pool.query(`
-      SELECT max_capacity FROM areas WHERE id = $1
+      SELECT max_capacity FROM public.areas WHERE id = $1
     `, [areaId]);
 
     const max = parseInt(capResult.rows[0]?.max_capacity || 0);
@@ -107,8 +124,8 @@ app.get('/alerts', async (req, res) => {
   try {
     const result = await pool.query(`
       SELECT a.name, SUM(e.count) AS total, a.max_capacity
-      FROM entries e
-      JOIN areas a ON e.area_id = a.id
+      FROM public.entries e
+      JOIN public.areas a ON e.area_id = a.id
       GROUP BY a.id
       HAVING SUM(e.count) > a.max_capacity
     `);
