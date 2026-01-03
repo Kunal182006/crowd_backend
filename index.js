@@ -54,8 +54,10 @@ app.get('/chart', async (req, res) => {
   try {
     const result = await pool.query(
       `
-      SELECT DATE_TRUNC('hour', entry_time) AS hour, SUM(count) AS total_count
-      FROM public.entries
+      SELECT DATE_TRUNC('hour', created_at) AS hour, SUM(count) AS total_count
+FROM public.entries
+...
+
       ${whereClause}
       GROUP BY hour
       ORDER BY hour ASC
