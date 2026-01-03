@@ -34,6 +34,22 @@ app.get('/stats', async (req, res) => {
     res.status(500).json({ error: 'Failed to fetch stats' });
   }
 });
+app.get('/chart', async (req, res) => {
+  try {
+    const result = await pool.query(`
+      SELECT
+        DATE_TRUNC('hour', created_at) AS hour,
+        SUM(count) AS total_count
+      FROM public.entries
+      GROUP BY hour
+      ORDER BY hour ASC
+    `);
+    res.json(result.rows);
+  } catch (err) {
+    console.error('Chart error:', err);
+    res.status(500).json({ error: 'Failed to generate chart data' });
+  }
+});
 
 // 404 handler
 app.use((req, res) => {
