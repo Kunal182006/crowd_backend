@@ -1,0 +1,68 @@
+<<!DOCTYPE html>
+<html>
+<head>
+  <title>Crowd Chart</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <h2>Crowd Count Over Time</h2>
+  <canvas id="crowdChart" width="800" height="400"></canvas>
+
+  <script>
+    async function fetchChartData() {
+      try {
+        const response = await fetch("https://crowd-backend-1.onrender.com/chart");
+        const data = await response.json();
+
+        if (!Array.isArray(data) || data.length === 0) {
+          document.body.insertAdjacentHTML('beforeend', '<p>No data available to display.</p>');
+          return;
+        }
+
+        const labels = data.map(entry => new Date(entry.hour).toLocaleString());
+        const counts = data.map(entry => parseInt(entry.total_count));
+
+        const ctx = document.getElementById('crowdChart').getContext('2d');
+        new Chart(ctx, {
+          type: 'line',
+          data: {
+            labels: labels,
+            datasets: [{
+              label: 'Crowd Count',
+              data: counts,
+              borderColor: 'blue',
+              backgroundColor: 'rgba(0, 0, 255, 0.1)',
+              fill: true,
+              tension: 0.3
+            }]
+          },
+          options: {
+            responsive: true,
+            plugins: {
+              legend: { display: true },
+              title: {
+                display: true,
+                text: 'Crowd Count Over Time'
+              }
+            },
+            scales: {
+              x: {
+                title: { display: true, text: 'Time' }
+              },
+              y: {
+                title: { display: true, text: 'Count' },
+                beginAtZero: true
+              }
+            }
+          }
+        });
+      } catch (err) {
+        console.error('Chart error:', err);
+        document.body.insertAdjacentHTML('beforeend', '<p>Error loading chart data.</p>');
+      }
+    }
+
+    fetchChartData();
+  </script>
+</body>
+</html>
