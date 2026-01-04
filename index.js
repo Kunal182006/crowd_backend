@@ -49,7 +49,7 @@ app.get('/chart', async (req, res) => {
     values.push(person_id);
   }
 
-  const whereClause = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
+const whereClause = ''; // temporarily remove filters
 
   try {
     const result = await pool.query(
