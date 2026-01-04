@@ -52,16 +52,12 @@ app.get('/chart', async (req, res) => {
 const whereClause = ''; // temporarily remove filters
 
   try {
-    const result = await pool.query(
-  `
+    const result = await pool.query(`
   SELECT DATE_TRUNC('hour', created_at) AS hour, SUM(count) AS total_count
   FROM public.entries
-  ${whereClause}
   GROUP BY hour
   ORDER BY hour ASC
-  `,
-  values
-);
+`);
 
     res.json(result.rows);
   } catch (err) {
