@@ -6,13 +6,12 @@ const cors = require('cors');
 const app = express();
 const port = process.env.PORT || 10000;
 
-// Middleware
 app.use(cors());
 app.use(express.json());
 
 // PostgreSQL connection
 const pool = new Pool({
-  connectionString: process.env.DATABASE_URL, // Render provides this automatically
+  connectionString: process.env.DATABASE_URL,
   ssl: { rejectUnauthorized: false }
 });
 
@@ -21,11 +20,11 @@ app.get('/', (req, res) => {
   res.send('Crowd backend is running!');
 });
 
-// Chart route
+// Chart route — FIXED
 app.get('/chart', async (req, res) => {
   try {
     const result = await pool.query(`
-      SELECT DATE_TRUNC('hour', created_at) AS hour, SUM(count) AS total_count
+      SELECT DATE_TRUNC('hour', created_at) AS hour, SUM(COALESCE(count, 0)) AS total_count
       FROM public.entries
       GROUP BY hour
       ORDER BY hour ASC
@@ -37,7 +36,7 @@ app.get('/chart', async (req, res) => {
   }
 });
 
-// History route (optional, if you want to see raw entries)
+// History route (optional)
 app.get('/history', async (req, res) => {
   try {
     const result = await pool.query(`SELECT * FROM public.entries ORDER BY created_at ASC`);
