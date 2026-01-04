@@ -6,25 +6,61 @@
   <title>Crowd Analytics Chart</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      padding: 2rem;
-      background: #f4f4f4;
-    }
-    canvas {
-      background: #fff;
-      border: 1px solid #ccc;
-      padding: 1rem;
-    }
+    body { font-family: Arial, sans-serif; padding: 2rem; background: #f4f4f4; }
+    canvas { background: #fff; border: 1px solid #ccc; padding: 1rem; }
+    .filters { margin-bottom: 1rem; }
+    select { margin-right: 1rem; padding: 0.3rem; }
   </style>
 </head>
 <body>
   <h2>Crowd Count Over Time</h2>
+
+  <div class="filters">
+    <label for="areaFilter">Area:</label>
+    <select id="areaFilter"></select>
+
+    <label for="personFilter">Person:</label>
+    <select id="personFilter"></select>
+
+    <button onclick="updateChart()">Apply Filters</button>
+  </div>
+
   <canvas id="crowdChart" width="800" height="400"></canvas>
 
   <script>
-    async function fetchChartData() {
-      const response = await fetch("https://crowd-backend-1.onrender.com/chart");
+    let chart;
+
+    async function loadFilters() {
+      const response = await fetch("https://crowd-backend-1.onrender.com/filters");
+      const data = await response.json();
+
+      const areaSelect = document.getElementById("areaFilter");
+      const personSelect = document.getElementById("personFilter");
+
+      // Populate area dropdown
+      areaSelect.innerHTML = '<option value="">All</option>';
+      data.area_ids.forEach(id => {
+        areaSelect.innerHTML += `<option value="${id}">${id}</option>`;
+      });
+
+      // Populate person dropdown
+      personSelect.innerHTML = '<option value="">All</option>';
+      data.person_ids.forEach(id => {
+        personSelect.innerHTML += `<option value="${id}">${id}</option>`;
+      });
+    }
+
+    async function updateChart() {
+      const area = document.getElementById("areaFilter").value;
+      const person = document.getElementById("personFilter").value;
+
+      let url = "https://crowd-backend-1.onrender.com/chart";
+      const params = [];
+      if (area) params.push(`area_id=${area}`);
+      if (person) params.push(`person_id=${person}`);
+      if (params.length) url += "?" + params.join("&");
+
+      const response = await fetch(url);
       const data = await response.json();
 
       const labels = data.map(entry => {
@@ -40,7 +76,10 @@
       const counts = data.map(entry => parseInt(entry.total_count));
 
       const ctx = document.getElementById("crowdChart").getContext("2d");
-      new Chart(ctx, {
+
+      if (chart) chart.destroy(); // reset old chart
+
+      chart = new Chart(ctx, {
         type: "line",
         data: {
           labels: labels,
@@ -58,25 +97,15 @@
         options: {
           responsive: true,
           scales: {
-            x: {
-              title: {
-                display: true,
-                text: "Time"
-              }
-            },
-            y: {
-              beginAtZero: true,
-              title: {
-                display: true,
-                text: "Crowd Count"
-              }
-            }
+            x: { title: { display: true, text: "Time" } },
+            y: { beginAtZero: true, title: { display: true, text: "Crowd Count" } }
           }
         }
       });
     }
 
-    fetchChartData();
+    // Load filters and initial chart
+    loadFilters().then(updateChart);
   </script>
 </body>
 </html>

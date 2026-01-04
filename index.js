@@ -61,6 +61,21 @@ app.get('/debug-db', async (req, res) => {
 
 // ✅ Serve static frontend files
 app.use(express.static(path.join(__dirname, 'frontend')));
+// Filters route: return distinct area_id and person_id values
+app.get('/filters', async (req, res) => {
+  try {
+    const areas = await pool.query(`SELECT DISTINCT area_id FROM public.entries ORDER BY area_id`);
+    const persons = await pool.query(`SELECT DISTINCT person_id FROM public.entries ORDER BY person_id`);
+
+    res.json({
+      area_ids: areas.rows.map(r => r.area_id),
+      person_ids: persons.rows.map(r => r.person_id)
+    });
+  } catch (err) {
+    console.error('Filters error:', err);
+    res.status(500).json({ error: 'Failed to fetch filters' });
+  }
+});
 
 // Start server
 app.listen(port, () => {
