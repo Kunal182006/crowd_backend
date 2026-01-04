@@ -36,6 +36,7 @@ app.get('/chart', async (req, res) => {
   }
 });
 
+
 // Debug route to verify DB and table contents
 app.get('/debug-db', async (req, res) => {
   try {
