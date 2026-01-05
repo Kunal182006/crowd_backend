@@ -7,7 +7,7 @@ const port = process.env.PORT || 3000;
 // Connect to Supabase Postgres using environment variable
 const pool = new Pool({
   connectionString: process.env.SUPABASE_DB_URL,
-  ssl: { rejectUnauthorized: false }
+  ssl: true
 });
 
 // Middleware
