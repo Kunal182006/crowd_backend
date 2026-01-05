@@ -52,3 +52,4 @@ app.post('/entries', async (req, res) => {
 app.listen(port, () => {
   console.log(`Server running on port ${port}`);
 });
+require('dotenv').config(); // ❌ Remove this
