@@ -1,79 +1,50 @@
 // index.js
 const express = require('express');
 const { Pool } = require('pg');
-const cors = require('cors');
-const path = require('path');
+require('dotenv').config();
 
 const app = express();
-const port = process.env.PORT || 10000;
+const port = process.env.PORT || 3000;
 
-app.use(cors());
-app.use(express.json());
-
-// PostgreSQL connection
+// Connect to Supabase Postgres using environment variable
 const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
+  connectionString: process.env.SUPABASE_DB_URL,
   ssl: { rejectUnauthorized: false }
 });
 
-// Root route
+// Middleware
+app.use(express.json());
+
+// Test route
 app.get('/', (req, res) => {
-  res.send('Crowd backend is running!');
+  res.send('Crowd Analytics Backend is running with Supabase!');
 });
 
-// Chart route
-app.get('/chart', async (req, res) => {
+// History route: fetch recent entries
+app.get('/history', async (req, res) => {
   try {
-    const result = await pool.query(`
-      SELECT DATE_TRUNC('hour', created_at) AS hour, SUM(COALESCE(count, 0)) AS total_count
-      FROM public.entries
-      GROUP BY hour
-      ORDER BY hour ASC
-    `);
+    const result = await pool.query(
+      'SELECT * FROM public.entries ORDER BY created_at DESC LIMIT 50'
+    );
     res.json(result.rows);
   } catch (err) {
-    console.error('Chart error:', err);
-    res.status(500).json({ error: 'Failed to generate chart data' });
+    console.error('Error fetching history:', err);
+    res.status(500).json({ error: 'Failed to fetch history' });
   }
 });
 
-// Debug route
-app.get('/debug-db', async (req, res) => {
+// Add new entry route (optional)
+app.post('/entries', async (req, res) => {
+  const { area_id, person_id, count } = req.body;
   try {
-    const dbInfo = await pool.query(`SELECT current_database() AS db`);
-    const counts = await pool.query(`SELECT COUNT(*)::int AS entries_count FROM public.entries`);
-    const range = await pool.query(`
-      SELECT MIN(created_at) AS min_created_at, MAX(created_at) AS max_created_at
-      FROM public.entries
-    `);
-
-    res.json({
-      database: dbInfo.rows[0]?.db || null,
-      entries_count: counts.rows[0]?.entries_count || 0,
-      min_created_at: range.rows[0]?.min_created_at || null,
-      max_created_at: range.rows[0]?.max_created_at || null
-    });
+    const result = await pool.query(
+      'INSERT INTO public.entries (area_id, person_id, count) VALUES ($1, $2, $3) RETURNING *',
+      [area_id, person_id, count]
+    );
+    res.json(result.rows[0]);
   } catch (err) {
-    console.error('Debug DB error:', err);
-    res.status(500).json({ error: 'Failed to debug database' });
-  }
-});
-
-// ✅ Serve static frontend files
-app.use(express.static(path.join(__dirname, 'frontend')));
-// Filters route: return distinct area_id and person_id values
-app.get('/filters', async (req, res) => {
-  try {
-    const areas = await pool.query(`SELECT DISTINCT area_id FROM public.entries ORDER BY area_id`);
-    const persons = await pool.query(`SELECT DISTINCT person_id FROM public.entries ORDER BY person_id`);
-
-    res.json({
-      area_ids: areas.rows.map(r => r.area_id),
-      person_ids: persons.rows.map(r => r.person_id)
-    });
-  } catch (err) {
-    console.error('Filters error:', err);
-    res.status(500).json({ error: 'Failed to fetch filters' });
+    console.error('Error inserting entry:', err);
+    res.status(500).json({ error: 'Failed to insert entry' });
   }
 });
 
