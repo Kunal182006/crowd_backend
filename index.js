@@ -6,7 +6,7 @@ const port = process.env.PORT || 3000;
 
 // Connect to Supabase Postgres using environment variable
 const pool = new Pool({
-  connectionString: process.env.SUPABASE_DB_URL,
+  connectionString: process.env.SUPABASE_DB_URL_V2,
   ssl: { rejectUnauthorized: false }
 });
 
@@ -51,4 +51,5 @@ app.post('/entries', async (req, res) => {
 app.listen(port, () => {
   console.log(`Server running on port ${port}`);
 });
+console.log('DB URL:', process.env.SUPABASE_DB_URL);
 
