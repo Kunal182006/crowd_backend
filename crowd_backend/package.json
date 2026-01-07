@@ -1,19 +1,13 @@
 {
   "name": "crowd_backend",
   "version": "1.0.0",
-  "description": "Backend service for crowd management app",
+  "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "node index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "keywords": [
-    "crowd",
-    "backend",
-    "express",
-    "postgresql"
-  ],
-  "author": "Kunal",
+  "keywords": [],
+  "author": "",
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
