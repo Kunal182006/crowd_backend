@@ -1,0 +1,24 @@
+{
+  "expo": {
+    "name": "CrowdAnalytics",
+    "slug": "crowd-analytics",
+    "version": "1.0.0",
+    "sdkVersion": "54.0.0",
+    "platforms": ["android"],
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "updates": {
+      "fallbackToCacheTimeout": 0
+    },
+    "assetBundlePatterns": ["**/*"],
+    "android": {
+      "permissions": ["INTERNET"]
+    }
+  }
+}

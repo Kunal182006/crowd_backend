@@ -1,36 +1,47 @@
-const express = require('express');
-const cors = require('cors');
-const { Pool } = require('pg');
-require('dotenv').config();
+import express from "express";
+import bodyParser from "body-parser";
+import pkg from "pg";
+const { Pool } = pkg;
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+app.use(bodyParser.json());
 
-app.use(cors()); // ✅ This line enables CORS
-app.use(express.json());
-
-const dbUrl = process.env.SUPABASE_DB_URL;
-console.log("DB URL:", dbUrl);
-
+// Supabase connection
 const pool = new Pool({
-  connectionString: dbUrl,
-  ssl: {
-    rejectUnauthorized: false
-  }
+  connectionString: process.env.DATABASE_URL,
+  ssl: { rejectUnauthorized: false },
 });
 
-app.get('/history', async (req, res) => {
+// ✅ Log new crowd entry
+app.post("/log", async (req, res) => {
+  const { count, person_id } = req.body;
   try {
-    const result = await pool.query('SELECT * FROM entries ORDER BY created_at DESC LIMIT 100');
-    console.log("Fetched rows:", result.rows); // ✅ Add this for debugging
-    res.json(result.rows); // ✅ This must be an array
-  } catch (error) {
-    console.error("Error fetching history:", error); // ✅ Log full error
-    res.status(500).json({ error: 'Internal server error' }); // ✅ This is what frontend sees
+    await pool.query(
+      "INSERT INTO entries (count, person_id) VALUES ($1, $2)",
+      [count, person_id || "unknown"]
+    );
+    res.status(200).json({ message: "Logged successfully" });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to log entry" });
   }
 });
 
+// ✅ Fetch crowd history
+app.get("/history", async (req, res) => {
+  try {
+    const result = await pool.query(
+      "SELECT count, created_at FROM entries ORDER BY created_at DESC LIMIT 50"
+    );
+    res.json(result.rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to fetch history" });
+  }
+});
 
+// ✅ Start server
+const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-  console.log(`✅ Server running on port ${PORT}`);
+  console.log(`Backend running on port ${PORT}`);
 });
