@@ -8,7 +8,7 @@ app.use(bodyParser.json());
 
 // Supabase connection
 const pool = new Pool({
-  connectionString: process.env.SUPABASE_DB_URL,
+  connectionString: process.env.DATABASE_URL,
   ssl: { rejectUnauthorized: false },
 });
 
@@ -18,11 +18,11 @@ app.post("/log", async (req, res) => {
   try {
     await pool.query(
       "INSERT INTO entries (count, person_id) VALUES ($1, $2)",
-      [count, person_id || "unknown"]
+      [count, person_id]
     );
-    res.status(200).json({ message: "Logged successfully" });
+    res.json({ success: true });
   } catch (err) {
-    console.error(err);
+    console.error("Error logging entry:", err);
     res.status(500).json({ error: "Failed to log entry" });
   }
 });
@@ -31,17 +31,15 @@ app.post("/log", async (req, res) => {
 app.get("/history", async (req, res) => {
   try {
     const result = await pool.query(
-      "SELECT count, created_at FROM entries ORDER BY created_at DESC LIMIT 50"
+      "SELECT count, created_at, person_id FROM entries ORDER BY created_at DESC"
     );
     res.json(result.rows);
   } catch (err) {
-    console.error(err);
+    console.error("Error fetching history:", err);
     res.status(500).json({ error: "Failed to fetch history" });
   }
 });
 
-// ✅ Start server
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log(`Backend running on port ${PORT}`);
+app.listen(3000, () => {
+  console.log("Server running on port 3000");
 });
