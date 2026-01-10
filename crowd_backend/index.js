@@ -8,7 +8,7 @@ app.use(bodyParser.json());
 
 // Supabase connection
 const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
+  connectionString: process.env.SUPABASE_DB_URL,
   ssl: { rejectUnauthorized: false },
 });
 
