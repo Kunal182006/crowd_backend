@@ -14,11 +14,11 @@ const pool = new Pool({
 
 // ✅ Log new crowd entry
 app.post("/log", async (req, res) => {
-  const { count, person_id } = req.body;
+  const { count, person_id, area_id } = req.body;
   try {
     await pool.query(
-      "INSERT INTO entries (count, person_id) VALUES ($1, $2)",
-      [count, person_id]
+      "INSERT INTO entries (count, person_id, area_id) VALUES ($1, $2, $3)",
+      [count, person_id, area_id]
     );
     res.json({ success: true });
   } catch (err) {
