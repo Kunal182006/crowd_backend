@@ -31,15 +31,11 @@ app.post("/log", async (req, res) => {
 app.get("/history", async (req, res) => {
   try {
     const result = await pool.query(
-      "SELECT count, created_at, person_id FROM entries ORDER BY created_at DESC"
+      "SELECT * FROM entries ORDER BY created_at DESC LIMIT 100"
     );
     res.json(result.rows);
   } catch (err) {
     console.error("Error fetching history:", err);
     res.status(500).json({ error: "Failed to fetch history" });
   }
-});
-
-app.listen(3000, () => {
-  console.log("Server running on port 3000");
 });
